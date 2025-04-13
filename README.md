@@ -1,1 +1,1 @@
-# microsoft-entra-id-nextauth
+# Microsoft Entra ID + Next.js（Auth.js） Example
