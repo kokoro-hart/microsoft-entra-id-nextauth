@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import type { DefaultSession } from "next-auth";
 
 import "@auth/core/jwt";

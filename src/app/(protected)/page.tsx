@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import Image from "next/image";
 
 export default async function Home() {
   const session = await auth();
@@ -7,7 +8,7 @@ export default async function Home() {
       <h2>Route：(protected)/page.tsx</h2>
       <section>
         <h2 className="flex items-center gap-2">
-          <img src="/microsoft.svg" alt="Microsoft" className="w-6 h-6" />
+          <Image src="/microsoft.svg" alt="Microsoft" className="w-6 h-6" width={24} height={24} />
           Session：
         </h2>
         <pre>{JSON.stringify(session, null, 2)}</pre>
