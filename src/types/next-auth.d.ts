@@ -5,8 +5,6 @@ import type { DefaultSession } from "next-auth";
 import "@auth/core/jwt";
 
 export interface AppSession {
-  idToken?: string;
-  accessToken?: string;
   error?: string | null;
 }
 
@@ -15,6 +13,7 @@ export interface AppJWT {
   accessToken?: string;
   refreshToken?: string;
   expiresAt?: number;
+  emailVerified: Date | null;
   error?: string;
 }
 

@@ -1,17 +1,21 @@
+import jwt, { JwtPayload } from "jsonwebtoken";
+
 import type { NextAuthConfig } from "next-auth";
 import { ConfidentialClientApplication } from "@azure/msal-node";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 
 const LoggerMessages = {
-  emptyToken: "アクセストークンが取得できませんでした",
-  expiredToken: "アクセストークンの有効期限が切れています",
+  emptyAccessToken: "アクセストークンが取得できませんでした",
+  emptySub: "ユーザー識別子 (sub) が取得できませんでした",
+  expiredAccessToken: "アクセストークンの有効期限が切れています",
   startedToRefreshAccessToken: "アクセストークンの更新を開始します",
   failedToRefreshAccessToken: "アクセストークンの更新に失敗しました",
   successToRefreshAccessToken: "アクセストークンの更新に成功しました",
 } as const;
 
 export const ErrorCodes = {
-  emptyToken: "EMPTY_TOKEN",
+  emptyAccessToken: "EMPTY_ACCESS_TOKEN",
+  emptySub: "EMPTY_SUB",
   failedToRefreshAccessToken: "FAILED_TO_REFRESH_ACCESS_TOKEN",
 } as const;
 
@@ -72,20 +76,32 @@ export const authConfig: NextAuthConfig = {
     }),
   ],
   callbacks: {
-    async jwt({ token, account }) {
+    async jwt({ token, account, profile }) {
       if (account) {
         const { id_token, access_token, refresh_token, expires_in } = account;
-        if (id_token) token.idToken = id_token;
-        if (access_token) token.accessToken = access_token;
-        if (refresh_token) token.refreshToken = refresh_token;
-        if (expires_in) token.expiresAt = Date.now() + expires_in * 1000;
+        if (id_token) {
+          const decoded = jwt.decode(id_token) as JwtPayload;
+          token.emailVerified = decoded?.email_verified ?? null;
+        }
+        token.accessToken = access_token ?? token.accessToken;
+        token.refreshToken = refresh_token ?? token.refreshToken;
+        token.expiresAt = expires_in ? Date.now() + expires_in * 1000 : token.expiresAt;
         token.error = undefined;
       }
 
-      const isEmptyToken = !token.accessToken;
-      if (isEmptyToken) {
-        console.error("authConfig.callback.jwt", LoggerMessages.emptyToken);
-        token.error = ErrorCodes.emptyToken;
+      if (profile) {
+        token.sub = profile.sub ?? token.sub;
+        token.email = profile.email ?? token.email;
+        token.name = profile.name ?? token.name;
+      }
+
+      if (!token.accessToken) {
+        console.error("authConfig.callback.jwt", LoggerMessages.emptyAccessToken);
+        token.error = ErrorCodes.emptyAccessToken;
+      }
+      if (!token.sub) {
+        console.error("authConfig.callback.jwt", LoggerMessages.emptySub);
+        token.error = ErrorCodes.emptySub;
       }
 
       // アクセストークンの有効期限が切れている場合
@@ -106,8 +122,12 @@ export const authConfig: NextAuthConfig = {
       return token;
     },
     async session({ session, token }) {
-      session.accessToken = token.accessToken;
-      session.idToken = token.idToken;
+      session.user = {
+        id: token.sub!,
+        name: token.name!,
+        email: token.email!,
+        emailVerified: token.emailVerified ?? null,
+      };
       session.error = token.error ?? null;
       return session;
     },

@@ -23,7 +23,7 @@ export default auth((req) => {
   // 認証が必要なページにアクセスした場合
   // ログインしている場合はアクセスを許可し、未ログインの場合はログインページにリダイレクト
   if (isProtectedRoute(pathname) && (!isLoggedIn || session?.error)) {
-    return Response.redirect(new URL("/signIn", nextUrl));
+    return Response.redirect(new URL("/signin", nextUrl));
   }
 
   // 認証済みで認証ページにアクセスした場合は、TOP にリダイレクト
