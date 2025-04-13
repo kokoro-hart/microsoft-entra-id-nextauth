@@ -99,6 +99,7 @@ export const authConfig: NextAuthConfig = {
         console.error("authConfig.callback.jwt", LoggerMessages.emptyAccessToken);
         token.error = ErrorCodes.emptyAccessToken;
       }
+
       if (!token.sub) {
         console.error("authConfig.callback.jwt", LoggerMessages.emptySub);
         token.error = ErrorCodes.emptySub;
