@@ -1,0 +1,1 @@
+# microsoft-entra-id-nextauth
